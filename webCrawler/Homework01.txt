@@ -1,0 +1,5 @@
+Question: what proportion of the total pages were retrieved by the focused crawler for ‘concordance’?
+Answer: 
+Total number of pages retrieved were 23659 for the depth 5.
+I found a total number of 514 links for keyphrase “concordance”.
+Hence the proportion is 514/23659 which is 0.0217.
