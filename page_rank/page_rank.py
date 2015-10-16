@@ -3,6 +3,7 @@ import sys
 import os
 
 import argparse
+import operator
 
 from collections import defaultdict
 from decimal import *
@@ -74,12 +75,10 @@ def calculate_perplexity():
 def isconverged(counter):
     perplexity_value = calculate_perplexity()
     print "Counter ", counter+1,"Perplextiy Value : " ,perplexity_value
-    print "Value : ", perplexity_value
     perplexity.append(perplexity_value)
-    print len(perplexity)
     if len(perplexity) > 4:
         if (int(perplexity[counter]) == int(perplexity[counter - 1]) == int(perplexity[counter - 2]) == int(perplexity[counter - 3])):
-            print counter + 1," ",calculate_perplexity(),"\n"
+            print "Convergence Counter : ", counter + 1," Convergence Value : ",calculate_perplexity(),"\n"
             return False
         else:
             return True
@@ -89,8 +88,10 @@ def isconverged(counter):
 def perform_calculations():
     counter = 0
     temp = (1.0 - DAMPING_FACTOR)/len(all_pages)
+    print "Perplexity Values with counter "
+    print "-" * 80 + "\n"
     while isconverged(counter):
-#    while counter<=1:
+#    while counter<=100:
         sink_page_rank = 0
         for sink_page in sink:
             sink_page_rank += page_rank[sink_page]
@@ -104,11 +105,46 @@ def perform_calculations():
             page_rank[pages] = new_page_rank[pages]
         counter +=1
 
+def printing_page_rank():
+    sorted_page_ranks = sorted(page_rank.items(), key=operator.itemgetter(0))
+    print "Page Rank for 6 Node graph with counter : "
+    print "-" * 80 + "\n"
+    for key, value in sorted_page_ranks:
+        print "Vertex : ", key,"Page Rank for it : ", value
+
+def get_top_fifty_pagerank():
+    top_fifty_page_rank = sorted(page_rank.items(), key=operator.itemgetter(1), reverse=True)
+    print "Top Fifty pages sorted Page Rank "
+    print "-" * 80 + "\n"
+    for each_rank in xrange(50):
+        print top_fifty_page_rank[each_rank]
+
+def get_top_fifty_by_inlinks():
+    top_fifty_inlinks = dict()
+    for vertex,links in inlinks.iteritems():
+        count = 0
+        for link in links:
+            count+=1
+        top_fifty_inlinks[vertex] = count
+    sorted_inlinks = sorted(top_fifty_inlinks.items(), key=operator.itemgetter(1), reverse=True)
+    print "\n"+"Top Fifty pages sorted by Inlinks count "
+    print "-" * 80 + "\n"
+    for each_inlink in xrange(50):
+        print sorted_inlinks[each_inlink]
+
+def compute_sizeof_difference_in_page_rank():
+    difference_page_rank = dict()
+    initial_page_rank = 1.0/183811
+    for page,rank in page_rank.iteritems():
+        if rank < initial_page_rank:
+            difference_page_rank[page] = rank
+    return len(difference_page_rank)
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
     if os.path.getsize(args.input_file) > 0:
-#        lines = list(process_file(args.input_file))
         for line in list(process_file(args.input_file)):
             setup_links(line)
     else:
@@ -117,11 +153,18 @@ def main():
     sink_nodes = get_sink(outlinks)
     initialize_pagerank()
     perform_calculations()
-    print "Length of inlinks: ", len(inlinks)
-    print "Length of outlinks: ", len(outlinks) - len(sink)
-    print "Length of Nodes : ", len(all_pages)
-    print "Length of Sink : ", len(sink)
-    print "Length of source : ", len(source)
+    print "Size of the Links based on Calculations : "
+    print "-" * 80 + "\n"
+    print "size of inlinks: ", len(inlinks)
+    print "size of outlinks: ", len(outlinks) - len(sink)
+    print "size of Nodes : ", len(all_pages)
+    print "size of Sink : ", len(sink)
+    print "size of source : ", len(source) , "\n"
+#    printing_page_rank()
+    get_top_fifty_pagerank()
+    get_top_fifty_by_inlinks()
+    difference_page_rank = compute_sizeof_difference_in_page_rank()
+    print difference_page_rank
 
 if __name__ == '__main__':
     main()
