@@ -1,4 +1,10 @@
 #!env python
+
+"""Calculate the PageRank of the given graph and then perform analysis on inlinks.Also check for the convergence value"""
+"""
+__created_on__ =  10/16/2015
+__author__ = "Umang Mukesh Mehta"
+"""
 import sys
 import os
 
@@ -6,7 +12,6 @@ import argparse
 import operator
 
 from collections import defaultdict
-from decimal import *
 import math
 
 DAMPING_FACTOR = 0.85
@@ -20,6 +25,7 @@ new_page_rank = dict()
 perplexity = list()
 
 def get_parser():
+    """creates the object via the input parsed"""
     parser = argparse.ArgumentParser(
     description='calculate the pageRanks of given pages'
     )
@@ -33,6 +39,7 @@ def get_parser():
     return parser
 
 def createlinks(node, pages):
+    """ creates inlinks and outlinks for the given input graph"""
     if not pages:
         inlinks[node]
     for page in pages:
@@ -42,43 +49,46 @@ def createlinks(node, pages):
             outlinks[node]
 
 def setup_links(line):
+    """" sets up the nodes and pages in list of lines passed to create links"""
     pages = line.rstrip().split(" ")
     node = pages[0]
     all_pages.add(node)
     if len(pages) == 1:
-#            print "No inlinks for: ", pages
         source.add(pages[0])
-#    sorted_inlinks[node].add(len(pages)-1)
     createlinks(node, pages[1:])
 
 def process_file(input_file):
+    """ processes the files as specified by user"""
     with open(input_file, "r") as file:
         for line in file.read().splitlines():
             yield line
 
 def get_sink(outlinks):
+    """calculates the sink nodes"""
     for key, value in outlinks.iteritems():
             if value == set([]):
                 sink.add(key)
 
 def initialize_pagerank():
+    """intializes the default value for page rank"""
     for page in all_pages:
         page_rank[page] = 1.0/len(all_pages)
 
 def calculate_perplexity():
+    """Calculates the perplexity for the probablity distribution of pages"""
     entropy = 0.0
     for page in page_rank.keys():
         entropy += page_rank[page] * math.log((1/page_rank[page]), 2)
-#    entropy = -entropy
     return 2**entropy
 
 def isconverged(counter):
+    """checks for convergence condition for a given graph"""
     perplexity_value = calculate_perplexity()
-    print "Counter ", counter+1,"Perplextiy Value : " ,perplexity_value
+    print "Perplextiy Value : " ,perplexity_value
     perplexity.append(perplexity_value)
     if len(perplexity) > 4:
         if (int(perplexity[counter]) == int(perplexity[counter - 1]) == int(perplexity[counter - 2]) == int(perplexity[counter - 3])):
-            print "Convergence Counter : ", counter + 1," Convergence Value : ",calculate_perplexity(),"\n"
+            print "Convergence Value : ",calculate_perplexity(),"\n"
             return False
         else:
             return True
@@ -86,11 +96,14 @@ def isconverged(counter):
         return True
 
 def perform_calculations():
+    """perform calculation for pageRank for a given graph"""
     counter = 0
     temp = (1.0 - DAMPING_FACTOR)/len(all_pages)
-    print "Perplexity Values with counter "
+    print "Perplexity Values for the given graph "
     print "-" * 80 + "\n"
     while isconverged(counter):
+#Uncomment the line below and comment the line above for the 6 Node graph
+##########################################
 #    while counter<=100:
         sink_page_rank = 0
         for sink_page in sink:
@@ -106,6 +119,7 @@ def perform_calculations():
         counter +=1
 
 def printing_page_rank():
+    """prints page rank for 6 node graph"""
     sorted_page_ranks = sorted(page_rank.items(), key=operator.itemgetter(0))
     print "Page Rank for 6 Node graph with counter : "
     print "-" * 80 + "\n"
@@ -113,6 +127,7 @@ def printing_page_rank():
         print "Vertex : ", key,"Page Rank for it : ", value
 
 def get_top_fifty_pagerank():
+    """gets the top fifty pageranks from the lit of pageranks"""
     top_fifty_page_rank = sorted(page_rank.items(), key=operator.itemgetter(1), reverse=True)
     print "Top Fifty pages sorted Page Rank "
     print "-" * 80 + "\n"
@@ -120,6 +135,7 @@ def get_top_fifty_pagerank():
         print top_fifty_page_rank[each_rank]
 
 def get_top_fifty_by_inlinks():
+    """gets the top fifty inlinks from the lit of pageranks"""
     top_fifty_inlinks = dict()
     for vertex,links in inlinks.iteritems():
         count = 0
@@ -133,6 +149,7 @@ def get_top_fifty_by_inlinks():
         print sorted_inlinks[each_inlink]
 
 def compute_sizeof_difference_in_page_rank():
+    """calculates the difference in page rank from the current and initial value"""
     difference_page_rank = dict()
     initial_page_rank = 1.0/183811
     for page,rank in page_rank.iteritems():
@@ -160,11 +177,13 @@ def main():
     print "size of Nodes : ", len(all_pages)
     print "size of Sink : ", len(sink)
     print "size of source : ", len(source) , "\n"
-#    printing_page_rank()
+    printing_page_rank()
+###################################################################
+# Comment all the lines below when computing the 6 node graph
     get_top_fifty_pagerank()
     get_top_fifty_by_inlinks()
     difference_page_rank = compute_sizeof_difference_in_page_rank()
-    print difference_page_rank
+    print "\n Size of pages whose page rank is less than the initial page rank :", difference_page_rank
 
 if __name__ == '__main__':
     main()
